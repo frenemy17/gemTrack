@@ -1,0 +1,128 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User Model (No change)
+// For the shop owner's login
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+// 2. Customer Model (NEW)
+// For managing the customer database (CRM)
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?  @unique
+  email     String?  @unique
+  address   String?
+  city      String?
+  pincode   String?
+  pancard   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // This links a Customer to all their past Sales
+  sales Sale[]
+
+  @@map("customers")
+}
+
+// 3. Item Model (UPGRADED)
+// Upgraded to include all detailed fields from your screenshots
+model Item {
+  id        Int      @id @default(autoincrement())
+  name      String
+  
+  // This is your scannable "barcode" ID
+  sku       String   @unique
+  
+  // New detailed fields
+  huid      String?  // Hallmarking Unique ID
+  purity    String?  // e.g., "22CT" or "24CT"
+  category  String?  // e.g., "Ring", "Chain", "Bracelet"
+  
+  grossWeight Float?
+  netWeight   Float?
+  
+  makingPerGm    Float? // Making charge per gram
+  wastagePct     Float? // Wastage percentage (e.g., 5.0 for 5%)
+  
+  hallmarkingCharges Int?
+  stoneCharges       Int?
+  otherCharges       Int?
+  
+  cgstPct     Float? // Tax percentages (e.g., 1.5 for 1.5%)
+  sgstPct     Float?
+  
+  // These are from our simple MVP, updated to be more realistic (Float for price)
+  cost      Float?     // Your purchase cost
+  price     Float?     // Your default selling price
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // This links an Item to all the times it was sold
+  saleItems SaleItem[]
+
+  @@map("items")
+}
+
+// 4. Sale Model (NEW)
+// This is the "Receipt" for a single transaction
+model Sale {
+  id            Int      @id @default(autoincrement())
+  totalAmount   Float      // The final total of the sale
+  paymentMethod String   // "Cash", "Card", "UPI", etc.
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // This links the Sale to a Customer
+  customerId Int? // Optional, for "guest" checkouts
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // This links the Sale to the list of items that were sold
+  saleItems  SaleItem[]
+
+  @@map("sales")
+}
+
+// 5. SaleItem Model (NEW)
+// This "join table" links a Sale to its Items.
+// It's crucial for "who bought what" and "edit final price".
+model SaleItem {
+  id         Int @id @default(autoincrement())
+  
+  // This is the price the item *actually* sold for (might differ from Item.price)
+  soldPrice  Float 
+  
+  // We can also store the *exact* charges at the time of sale
+  soldMakingCharge Float?
+  soldWastage      Float?
+  soldHallmarking  Int?
+  soldStoneCharges Int?
+  soldOtherCharges Int?
+  soldCgstPct      Float?
+  soldSgstPct      Float?
+
+
+  // Connects this line item to a Sale
+  saleId     Int
+  sale       Sale @relation(fields: [saleId], references: [id])
+
+  // Connects this line item to an Item
+  itemId     Int
+  item       Item @relation(fields: [itemId], references: [id])
+
+  @@map("sale_items")
+}
