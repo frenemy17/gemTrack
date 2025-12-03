@@ -1,13 +1,13 @@
 require('dotenv').config();
-const express=require("express")
-const authRoutes = require('./routes/auth'); 
-const itemRoutes=require('./routes/items')
-const customerRoutes=require('./routes/customer')
-const saleRoutes=require('./routes/sale')
-const marketRoutes=require('./routes/market')
-const dashboardRoutes=require('./routes/dashboard')
-const app=express()
-const prisma=require('./prismaClient');
+const express = require("express")
+const authRoutes = require('./routes/auth');
+const itemRoutes = require('./routes/items')
+const customerRoutes = require('./routes/customer')
+const saleRoutes = require('./routes/sale')
+const marketRoutes = require('./routes/market')
+const dashboardRoutes = require('./routes/dashboard')
+const app = express()
+const prisma = require('./prismaClient');
 const cors = require('cors');
 
 const PORT = process.env.PORT || 3001;
@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(cors({
-  origin : "*",
-  methods : ["GET","POST","PUT","DELETE"],
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 app.use('/api/auth', authRoutes);
@@ -41,7 +41,11 @@ app.get('/', (req, res) => {
 });
 
 
-app.listen(PORT, 'localhost', () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  connectToDatabase();
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+    connectToDatabase();
+  });
+}
+
+module.exports = app;
