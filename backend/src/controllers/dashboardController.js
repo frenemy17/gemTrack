@@ -33,7 +33,7 @@ exports.getSalesOverTime = async (req, res) => {
   try {
     const salesByMonth = await prisma.$queryRaw`
       SELECT 
-        DATE_FORMAT(created_at, '%Y-%m') as month,
+        TO_CHAR(created_at, 'YYYY-MM') as month,
         SUM(totalSaleAmount) as totalSales
       FROM sales
       GROUP BY month
@@ -125,7 +125,7 @@ exports.getSalesByYear = async (req, res) => {
   try {
     const salesByYear = await prisma.$queryRaw`
       SELECT 
-        DATE_FORMAT(created_at, '%Y') as year,
+        TO_CHAR(created_at, 'YYYY') as year,
         SUM(totalSaleAmount) as totalSales
       FROM sales
       GROUP BY year

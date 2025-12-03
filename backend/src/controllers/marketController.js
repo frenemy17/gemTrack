@@ -14,7 +14,8 @@ exports.getMarketRates = async (req, res) => {
         'x-access-token': apiKey,
         'Content-Type': 'application/json'
       },
-      maxRedirects: 5
+      maxRedirects: 5,
+      timeout: 5000 // 5 seconds timeout
     };
 
     // Fetch Gold (XAU) and Silver (XAG) in INR
