@@ -79,7 +79,7 @@ export const dashboard = {
 export const market = {
     getRates: async () => {
         try {
-            const res = await api.get('/market/rates');
+            const res = await api.get('/market/rates', { timeout: 10000 }); // 10s timeout for external API
             return res;
         } catch (error) {
             console.error("Failed to fetch market rates", error);
