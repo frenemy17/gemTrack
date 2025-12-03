@@ -10,7 +10,6 @@ datasource db {
 }
 
 // 1. User Model (No change)
-// For the shop owner's login
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -21,8 +20,7 @@ model User {
   @@map("users")
 }
 
-// 2. Customer Model (NEW)
-// For managing the customer database (CRM)
+// 2. Customer Model (No change from Phase 2)
 model Customer {
   id        Int      @id @default(autoincrement())
   name      String
@@ -33,80 +31,64 @@ model Customer {
   pincode   String?
   pancard   String?
   createdAt DateTime @default(now()) @map("created_at")
-
-  // This links a Customer to all their past Sales
-  sales Sale[]
+  sales     Sale[]
 
   @@map("customers")
 }
 
-// 3. Item Model (UPGRADED)
-// Upgraded to include all detailed fields from your screenshots
+// 3. Item Model (No change from Phase 2)
 model Item {
-  id        Int      @id @default(autoincrement())
-  name      String
-  
-  // This is your scannable "barcode" ID
-  sku       String   @unique
-  
-  // New detailed fields
-  huid      String?  // Hallmarking Unique ID
-  purity    String?  // e.g., "22CT" or "24CT"
-  category  String?  // e.g., "Ring", "Chain", "Bracelet"
-  
-  grossWeight Float?
-  netWeight   Float?
-  
-  makingPerGm    Float? // Making charge per gram
-  wastagePct     Float? // Wastage percentage (e.g., 5.0 for 5%)
-  
+  id                 Int       @id @default(autoincrement())
+  name               String
+  sku                String    @unique
+  huid               String?
+  purity             String?
+  category           String?
+  metal              String?   // Added for analytics
+  grossWeight        Float?
+  netWeight          Float?
+  makingPerGm        Float?
+  wastagePct         Float?
   hallmarkingCharges Int?
   stoneCharges       Int?
   otherCharges       Int?
-  
-  cgstPct     Float? // Tax percentages (e.g., 1.5 for 1.5%)
-  sgstPct     Float?
-  
-  // These are from our simple MVP, updated to be more realistic (Float for price)
-  cost      Float?     // Your purchase cost
-  price     Float?     // Your default selling price
-  
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // This links an Item to all the times it was sold
-  saleItems SaleItem[]
+  cgstPct            Float?
+  sgstPct            Float?
+  cost               Float?
+  price              Float?
+  isSold             Boolean   @default(false)
+  barcodePrinted     Boolean   @default(false)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  saleItems          SaleItem[]
 
   @@map("items")
 }
 
-// 4. Sale Model (NEW)
-// This is the "Receipt" for a single transaction
+// 4. Sale Model (UPGRADED FOR CREDIT)
 model Sale {
-  id            Int      @id @default(autoincrement())
-  totalAmount   Float      // The final total of the sale
-  paymentMethod String   // "Cash", "Card", "UPI", etc.
-  createdAt     DateTime @default(now()) @map("created_at")
+  id              Int       @id @default(autoincrement())
+  billNumber      String?   @unique // Unique bill number for the sale
+  totalSaleAmount Float     // The full price of the sale
+  discount        Float     @default(0) // Discount amount
+  amountPaid      Float     @default(0) // The total amount paid so far
+  amountDue       Float     // totalSaleAmount - discount - amountPaid
+  paymentStatus   String    // "PAID", "PARTIAL", "UNPAID"
+  dueDate         DateTime? // Optional: due date for the credit
+  createdAt       DateTime  @default(now()) @map("created_at")
 
-  // This links the Sale to a Customer
-  customerId Int? // Optional, for "guest" checkouts
-  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId Int?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
-  // This links the Sale to the list of items that were sold
-  saleItems  SaleItem[]
+  saleItems SaleItem[]
+  payments  Payment[]
 
   @@map("sales")
 }
 
-// 5. SaleItem Model (NEW)
-// This "join table" links a Sale to its Items.
-// It's crucial for "who bought what" and "edit final price".
+// 5. SaleItem Model (UPGRADED FOR DELETES)
 model SaleItem {
-  id         Int @id @default(autoincrement())
-  
-  // This is the price the item *actually* sold for (might differ from Item.price)
-  soldPrice  Float 
-  
-  // We can also store the *exact* charges at the time of sale
+  id               Int     @id @default(autoincrement())
+  soldPrice        Float
   soldMakingCharge Float?
   soldWastage      Float?
   soldHallmarking  Int?
@@ -115,14 +97,25 @@ model SaleItem {
   soldCgstPct      Float?
   soldSgstPct      Float?
 
+  saleId Int
+  sale   Sale @relation(fields: [saleId], references: [id], onDelete: Cascade) // Cascade delete
 
-  // Connects this line item to a Sale
-  saleId     Int
-  sale       Sale @relation(fields: [saleId], references: [id])
-
-  // Connects this line item to an Item
-  itemId     Int
-  item       Item @relation(fields: [itemId], references: [id])
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id])
 
   @@map("sale_items")
+}
+
+// 6. Payment Model (NEW)
+// This tracks each individual payment (installment, down payment) for a Sale
+model Payment {
+  id            Int      @id @default(autoincrement())
+  amountPaid    Float
+  paymentMethod String   // "Cash", "Card", "UPI"
+  paymentDate   DateTime @default(now())
+
+  saleId Int
+  sale   Sale @relation(fields: [saleId], references: [id], onDelete: Cascade) // Cascade delete
+
+  @@map("payments")
 }
