@@ -54,6 +54,7 @@ export default function DashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
+            // Fetch internal data first (Fast)
             const results = await Promise.allSettled([
                 dashboard.getStats(),
                 dashboard.getTotalSalesStats(),
@@ -61,11 +62,10 @@ export default function DashboardPage() {
                 dashboard.getSalesByCategory(),
                 dashboard.getPiecesByMetal(),
                 dashboard.getSalesOverTime(),
-                dashboard.getRecentSales(),
-                market.getRates()
+                dashboard.getRecentSales()
             ]);
 
-            const [statsRes, salesStatsRes, yearRes, catRes, metalRes, timeRes, recentRes, ratesRes] = results;
+            const [statsRes, salesStatsRes, yearRes, catRes, metalRes, timeRes, recentRes] = results;
 
             setStats(statsRes.status === 'fulfilled' ? statsRes.value.data : null);
             setSalesStats(salesStatsRes.status === 'fulfilled' ? salesStatsRes.value.data : null);
@@ -74,11 +74,19 @@ export default function DashboardPage() {
             setPiecesByMetal(metalRes.status === 'fulfilled' ? metalRes.value.data : []);
             setSalesOverTime(timeRes.status === 'fulfilled' ? timeRes.value.data : []);
             setRecentSales(recentRes.status === 'fulfilled' ? recentRes.value.data : []);
-            setGoldRates(ratesRes.status === 'fulfilled' ? ratesRes.value.data?.rates : null);
+
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
         } finally {
-            setLoading(false);
+            setLoading(false); // Show dashboard as soon as internal data is ready
+        }
+
+        // Fetch external market rates separately (Slow)
+        try {
+            const ratesRes = await market.getRates();
+            setGoldRates(ratesRes.data?.rates || null);
+        } catch (error) {
+            console.error("Failed to fetch market rates", error);
         }
     };
 
