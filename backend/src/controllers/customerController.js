@@ -1,4 +1,4 @@
-const prisma = require('../prismaClient');
+const prisma = require('../prismaClient.js');
 
 exports.getAllCustomers = async (req, res) => {
   const { page = 1, limit = 10, search = '' } = req.query;
@@ -9,9 +9,9 @@ exports.getAllCustomers = async (req, res) => {
     const where = {};
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { phone: { contains: search } },
+        { email: { contains: search } },
       ];
     }
 
@@ -48,8 +48,8 @@ exports.createCustomer = async (req, res) => {
     const newCustomer = await prisma.customer.create({
       data: {
         name,
-        phone,
-        email,
+        phone: phone && phone.trim() ? phone.trim() : null,
+        email: email && email.trim() ? email.trim() : null,
         address,
         city,
         pincode,
@@ -80,8 +80,8 @@ exports.updateCustomer = async (req, res) => {
       where: { id: parseInt(id) },
       data: {
         name,
-        phone,
-        email,
+        phone: phone && phone.trim() ? phone.trim() : null,
+        email: email && email.trim() ? email.trim() : null,
         address,
         city,
         pincode,

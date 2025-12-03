@@ -1,96 +1,157 @@
-const prisma=require('../prismaClient');
+const prisma = require('../prismaClient.js');
 
-exports.createItem = async (req, res) => {
-    try {
-      const { name, sku, weight, cost, price } = req.body;
-  
-      if (!name) {
-        return res.status(400).json({ message: 'Item name is required' });
-      }
-  
-      const newItem = await prisma.item.create({
-        data: {
-          name,
-          sku,
-          weight,
-          cost,
-          price
-        }
-      });
-  
-      res.status(201).json(newItem);
-  
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error while creating item' });
-    }
-  };
+exports.getUnprintedItems = async (req, res) => {
+  try {
+    const items = await prisma.item.findMany({
+      where: { barcodePrinted: false, isSold: false },
+      select: { id: true, name: true, sku: true },
+    });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch items.' });
+  }
+};
+
+exports.markAsPrinted = async (req, res) => {
+  try {
+    const { itemIds } = req.body;
+    await prisma.item.updateMany({
+      where: { id: { in: itemIds } },
+      data: { barcodePrinted: true },
+    });
+    res.json({ message: 'Items marked as printed' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update items.' });
+  }
+};
 
 exports.getAllItems = async (req, res) => {
-    try {
-     
-      const items = await prisma.item.findMany({
-       
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
-  
-      
-      res.status(200).json(items);
-  
-    } catch (error){
-      console.error(error);
-      res.status(500).json({ message: 'Server error while getting items' });
-    }
-  };
+  const { page = 1, limit = 10, search = '', purity = '', category = '', sortBy = 'createdAt', order = 'desc' } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const take = parseInt(limit);
 
-  exports.updateItem = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { name, sku, weight, cost, price } = req.body;
-  
-      const updatedItem = await prisma.item.update({
-        where: {
-          id: parseInt(id) 
-        },
-        data: {
-          name,
-          sku,
-          weight,
-          cost,
-          price
-        }
-      });
-  
-      res.status(200).json(updatedItem);
-  
-    } catch (error) {
-      console.error(error);
-      if (error.code === 'P2025') {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      res.status(500).json({ message: 'Server error while updating item' });
+  try {
+    const where = {};
+    if (search) {
+      where.OR = [{ name: { contains: search } }, { sku: { contains: search } }, { huid: { contains: search } }];
     }
-  };
+    if (purity && purity !== 'all') where.purity = purity;
+    if (category && category !== 'all') where.category = category;
 
-  exports.deleteItem = async (req, res) => {
-    try {
-      const { id } = req.params;
-  
-      await prisma.item.delete({
-        where: {
-          id: parseInt(id)
+    const items = await prisma.item.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { [sortBy]: order },
+      include: {
+        saleItems: {
+          include: {
+            sale: {
+              include: {
+                customer: {
+                  select: { name: true }
+                }
+              }
+            }
+          }
         }
-      });
-  
-      res.status(200).json({ message: 'Item deleted successfully' });
-  
-    } catch (error) {
-      console.error(error);
-      if (error.code === 'P2025') {
-        return res.status(404).json({ message: 'Item not found' });
       }
-      res.status(500).json({ message: 'Server error while deleting item' });
-    }
-  };
+    });
+    const totalItems = await prisma.item.count({ where });
+
+    res.json({ items, currentPage: parseInt(page), totalPages: Math.ceil(totalItems / take), totalItems });
+  } catch (error) {
+    console.error("Error fetching items:", error);
+    res.status(500).json({ message: 'Failed to fetch items.' });
+  }
+};
+
+exports.getItemBySku = async (req, res) => {
+  try {
+    const item = await prisma.item.findUnique({ where: { sku: req.params.sku } });
+    if (!item) return res.status(404).json({ message: 'Item not found.' });
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch item.' });
+  }
+};
+
+exports.getItemById = async (req, res) => {
+  try {
+    const item = await prisma.item.findUnique({ where: { id: parseInt(req.params.id) } });
+    if (!item) return res.status(404).json({ message: 'Item not found.' });
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch item.' });
+  }
+};
+
+exports.createItem = async (req, res) => {
+  const { name, sku, huid, purity, category, metal, grossWeight, netWeight, makingPerGm, wastagePct, hallmarkingCharges, stoneCharges, otherCharges, cgstPct, sgstPct, cost, price } = req.body;
+  if (!name || !sku) return res.status(400).json({ message: 'Name and SKU are required.' });
+
+  try {
+    const newItem = await prisma.item.create({
+      data: {
+        name, sku, huid, purity, category, metal,
+        grossWeight: grossWeight ? parseFloat(grossWeight) : null,
+        netWeight: netWeight ? parseFloat(netWeight) : null,
+        makingPerGm: makingPerGm ? parseFloat(makingPerGm) : null,
+        wastagePct: wastagePct ? parseFloat(wastagePct) : null,
+        hallmarkingCharges: hallmarkingCharges ? parseInt(hallmarkingCharges) : null,
+        stoneCharges: stoneCharges ? parseInt(stoneCharges) : null,
+        otherCharges: otherCharges ? parseInt(otherCharges) : null,
+        cgstPct: cgstPct ? parseFloat(cgstPct) : null,
+        sgstPct: sgstPct ? parseFloat(sgstPct) : null,
+        cost: cost ? parseFloat(cost) : null,
+        price: price ? parseFloat(price) : null,
+      },
+    });
+    res.status(201).json(newItem);
+  } catch (error) {
+    if (error.code === 'P2002') return res.status(409).json({ message: 'SKU already exists.' });
+    res.status(500).json({ message: 'Failed to create item.' });
+  }
+};
+
+exports.updateItem = async (req, res) => {
+  const { name, sku, huid, purity, category, metal, grossWeight, netWeight, makingPerGm, wastagePct, hallmarkingCharges, stoneCharges, otherCharges, cgstPct, sgstPct, cost, price } = req.body;
+  if (!name || !sku) return res.status(400).json({ message: 'Name and SKU required.' });
+
+  try {
+    const updatedItem = await prisma.item.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        name, sku, huid, purity, category, metal,
+        grossWeight: grossWeight ? parseFloat(grossWeight) : null,
+        netWeight: netWeight ? parseFloat(netWeight) : null,
+        makingPerGm: makingPerGm ? parseFloat(makingPerGm) : null,
+        wastagePct: wastagePct ? parseFloat(wastagePct) : null,
+        hallmarkingCharges: hallmarkingCharges ? parseInt(hallmarkingCharges) : null,
+        stoneCharges: stoneCharges ? parseInt(stoneCharges) : null,
+        otherCharges: otherCharges ? parseInt(otherCharges) : null,
+        cgstPct: cgstPct ? parseFloat(cgstPct) : null,
+        sgstPct: sgstPct ? parseFloat(sgstPct) : null,
+        cost: cost ? parseFloat(cost) : null,
+        price: price ? parseFloat(price) : null,
+      },
+    });
+    res.json(updatedItem);
+  } catch (error) {
+    if (error.code === 'P2025') return res.status(404).json({ message: 'Item not found.' });
+    if (error.code === 'P2002') return res.status(409).json({ message: 'SKU already exists.' });
+    res.status(500).json({ message: 'Failed to update item.' });
+  }
+};
+
+exports.deleteItem = async (req, res) => {
+  try {
+    const saleItems = await prisma.saleItem.findFirst({ where: { itemId: parseInt(req.params.id) } });
+    if (saleItems) return res.status(400).json({ message: 'Cannot delete sold item.' });
+    await prisma.item.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ message: 'Item deleted.' });
+  } catch (error) {
+    if (error.code === 'P2025') return res.status(404).json({ message: 'Item not found.' });
+    res.status(500).json({ message: 'Failed to delete item.' });
+  }
+};
