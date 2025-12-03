@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
-            const [statsRes, salesStatsRes, yearRes, catRes, metalRes, timeRes, recentRes, ratesRes] = await Promise.all([
+            const results = await Promise.allSettled([
                 dashboard.getStats(),
                 dashboard.getTotalSalesStats(),
                 dashboard.getSalesByYear(),
@@ -64,14 +64,17 @@ export default function DashboardPage() {
                 dashboard.getRecentSales(),
                 market.getRates()
             ]);
-            setStats(statsRes.data);
-            setSalesStats(salesStatsRes.data);
-            setSalesByYear(yearRes.data);
-            setSalesByCategory(catRes.data);
-            setPiecesByMetal(metalRes.data);
-            setSalesOverTime(timeRes.data);
-            setRecentSales(recentRes.data);
-            setGoldRates(ratesRes.data?.rates || null);
+
+            const [statsRes, salesStatsRes, yearRes, catRes, metalRes, timeRes, recentRes, ratesRes] = results;
+
+            setStats(statsRes.status === 'fulfilled' ? statsRes.value.data : null);
+            setSalesStats(salesStatsRes.status === 'fulfilled' ? salesStatsRes.value.data : null);
+            setSalesByYear(yearRes.status === 'fulfilled' ? yearRes.value.data : []);
+            setSalesByCategory(catRes.status === 'fulfilled' ? catRes.value.data : []);
+            setPiecesByMetal(metalRes.status === 'fulfilled' ? metalRes.value.data : []);
+            setSalesOverTime(timeRes.status === 'fulfilled' ? timeRes.value.data : []);
+            setRecentSales(recentRes.status === 'fulfilled' ? recentRes.value.data : []);
+            setGoldRates(ratesRes.status === 'fulfilled' ? ratesRes.value.data?.rates : null);
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
         } finally {
