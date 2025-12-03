@@ -12,6 +12,7 @@ import { Plus, Printer, Search, Filter, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
+import { BarcodePreviewModal } from '@/components/BarcodePreviewModal';
 
 export default function InventoryPage() {
     const [data, setData] = useState([]);
@@ -40,6 +41,10 @@ export default function InventoryPage() {
         }
     };
 
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [itemsToPrint, setItemsToPrint] = useState([]);
+
     const fetchBarcodeImage = async (sku) => {
         const response = await fetch(`https://barcodeapi.org/api/128/${encodeURIComponent(sku)}?height=30&width=2&bg=ffffff&fg=000000`);
         const blob = await response.blob();
@@ -48,6 +53,55 @@ export default function InventoryPage() {
             reader.onloadend = () => resolve(reader.result);
             reader.readAsDataURL(blob);
         });
+    };
+
+    const generatePDF = async (items) => {
+        const { jsPDF } = await import('jspdf');
+        const pdf = new jsPDF();
+
+        let x = 10, y = 20, col = 0;
+
+        pdf.setFontSize(16);
+        pdf.text('Barcode Labels', 10, 10);
+
+        for (const item of items) {
+            try {
+                const barcodeImg = await fetchBarcodeImage(item.sku);
+
+                // Grid Layout: 3 columns
+                if (col === 3) {
+                    col = 0;
+                    y += 45;
+                    x = 10;
+                }
+
+                // Check for new page
+                if (y > 270) {
+                    pdf.addPage();
+                    y = 20;
+                    x = 10;
+                    col = 0;
+                }
+
+                // Draw Barcode
+                pdf.addImage(barcodeImg, 'PNG', x, y, 60, 25);
+
+                // Draw Text
+                pdf.setFontSize(10);
+                const name = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
+                pdf.text(name, x + 5, y + 30);
+
+                pdf.setFontSize(8);
+                pdf.text(`SKU: ${item.sku}`, x + 5, y + 35);
+                pdf.text(`${item.netWeight}g | ${item.purity}`, x + 5, y + 39);
+
+                x += 70;
+                col++;
+            } catch (err) {
+                console.error(`Failed to generate barcode for ${item.sku}`, err);
+            }
+        }
+        return pdf;
     };
 
     const handlePrint = async () => {
@@ -61,70 +115,39 @@ export default function InventoryPage() {
             }
 
             const unprintedItems = res.data;
-            const { jsPDF } = await import('jspdf');
-            const pdf = new jsPDF();
+            setItemsToPrint(unprintedItems);
 
-            let x = 10, y = 20, col = 0;
-            const itemsPerPage = 24; // Adjust based on layout
-            let count = 0;
+            // Generate Preview
+            const pdf = await generatePDF(unprintedItems);
+            const blob = pdf.output('blob');
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setIsPreviewOpen(true);
 
-            pdf.setFontSize(16);
-            pdf.text('Barcode Labels', 10, 10);
+        } catch (error) {
+            console.error("Failed to generate preview", error);
+            toast.error("Preview Failed", {
+                description: "Failed to generate barcode preview."
+            });
+        }
+    };
 
-            for (const item of unprintedItems) {
-                try {
-                    const barcodeImg = await fetchBarcodeImage(item.sku);
-
-                    // Grid Layout: 3 columns
-                    if (col === 3) {
-                        col = 0;
-                        y += 45;
-                        x = 10;
-                    }
-
-                    // Check for new page
-                    if (y > 270) {
-                        pdf.addPage();
-                        y = 20;
-                        x = 10;
-                        col = 0;
-                    }
-
-                    // Draw Barcode
-                    pdf.addImage(barcodeImg, 'PNG', x, y, 60, 25);
-
-                    // Draw Text
-                    pdf.setFontSize(10);
-                    const name = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
-                    pdf.text(name, x + 5, y + 30);
-
-                    pdf.setFontSize(8);
-                    pdf.text(`SKU: ${item.sku}`, x + 5, y + 35);
-                    pdf.text(`${item.netWeight}g | ${item.purity}`, x + 5, y + 39);
-
-                    x += 70;
-                    col++;
-                    count++;
-                } catch (err) {
-                    console.error(`Failed to generate barcode for ${item.sku}`, err);
-                }
-            }
-
+    const handleConfirmPrint = async () => {
+        try {
+            const pdf = await generatePDF(itemsToPrint);
             pdf.save(`barcodes-${new Date().toISOString().split('T')[0]}.pdf`);
 
             // Mark as printed
-            await items.markAsPrinted(unprintedItems.map(i => i.id));
+            await items.markAsPrinted(itemsToPrint.map(i => i.id));
             loadItems(); // Refresh list
+            setIsPreviewOpen(false);
 
             toast.success("Barcodes Generated", {
-                description: `${unprintedItems.length} barcode labels generated.`
+                description: `${itemsToPrint.length} barcode labels generated.`
             });
-
         } catch (error) {
-            console.error("Failed to print barcodes", error);
-            toast.error("Generation Failed", {
-                description: "Failed to generate barcodes. Please try again."
-            });
+            console.error("Failed to print", error);
+            toast.error("Print Failed");
         }
     };
 
@@ -261,6 +284,13 @@ export default function InventoryPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <BarcodePreviewModal
+                isOpen={isPreviewOpen}
+                onClose={() => setIsPreviewOpen(false)}
+                pdfUrl={previewUrl}
+                onPrint={handleConfirmPrint}
+            />
         </div>
     );
 }

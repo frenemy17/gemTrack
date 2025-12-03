@@ -71,7 +71,7 @@ export default function DashboardPage() {
             setPiecesByMetal(metalRes.data);
             setSalesOverTime(timeRes.data);
             setRecentSales(recentRes.data);
-            setGoldRates(ratesRes.data.rates);
+            setGoldRates(ratesRes.data?.rates || null);
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
         } finally {
@@ -387,7 +387,7 @@ export default function DashboardPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {goldRates && (
+                                    {goldRates ? (
                                         <>
                                             <TableRow className="hover:bg-muted/50 transition-colors">
                                                 <TableCell className="font-medium">Gold 24K (999)</TableCell>
@@ -405,6 +405,12 @@ export default function DashboardPage() {
                                                 <TableCell className="text-right text-green-600"><ArrowUpRight className="h-4 w-4 inline" /></TableCell>
                                             </TableRow>
                                         </>
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                                                Market rates unavailable
+                                            </TableCell>
+                                        </TableRow>
                                     )}
                                 </TableBody>
                             </Table>
