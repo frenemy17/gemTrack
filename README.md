@@ -69,10 +69,9 @@ It bridges the gap between powerful desktop POS systems and overly simplistic mo
 
 ---
 
-## 🏗️ System Architecture
-
-```mermaid
+## 🏗️ System Architecture The system follows a modern Serverless Web architecture:
+mermaid
 graph LR
     A[Web Client\nNext.js + React] -- REST API --> B[Serverless Backend\nNode.js + Express]
-    B -- Prisma ORM --> C[Database\nPostgreSQL (Neon)]
+    B -- Prisma ORM --> C[Database\nPostgreSQL]
     B -- HTTP --> D[External API\nGoldAPI]
