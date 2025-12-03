@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middlewares/authMiddleware');
-const dashboardController = require('../controllers/dashboardcontroller');
+const dashboardController = require('../controllers/dashboardController');
 
 router.get('/stats', protect, dashboardController.getStats);
 router.get('/sales-over-time', protect, dashboardController.getSalesOverTime);
