@@ -34,7 +34,7 @@ exports.getSalesOverTime = async (req, res) => {
     const salesByMonth = await prisma.$queryRaw`
       SELECT 
         TO_CHAR(created_at, 'YYYY-MM') as month,
-        SUM(totalSaleAmount) as totalSales
+        SUM("totalSaleAmount") as totalSales
       FROM sales
       GROUP BY month
       ORDER BY month ASC
@@ -126,7 +126,7 @@ exports.getSalesByYear = async (req, res) => {
     const salesByYear = await prisma.$queryRaw`
       SELECT 
         TO_CHAR(created_at, 'YYYY') as year,
-        SUM(totalSaleAmount) as totalSales
+        SUM("totalSaleAmount") as totalSales
       FROM sales
       GROUP BY year
       ORDER BY year DESC
@@ -150,10 +150,10 @@ exports.getSalesByCategory = async (req, res) => {
     const categoryStats = await prisma.$queryRaw`
       SELECT 
         i.category,
-        SUM(si.soldPrice) as totalSales,
+        SUM(si."soldPrice") as totalSales,
         COUNT(si.id) as itemCount
       FROM sale_items si
-      JOIN items i ON si.itemId = i.id
+      JOIN items i ON si."itemId" = i.id
       WHERE i.category IS NOT NULL
       GROUP BY i.category
       ORDER BY totalSales DESC;
@@ -182,9 +182,9 @@ exports.getTotalSalesStats = async (req, res) => {
     const categoryStats = await prisma.$queryRaw`
       SELECT 
         i.category,
-        SUM(si.soldPrice) as amount
+        SUM(si."soldPrice") as amount
       FROM sale_items si
-      JOIN items i ON si.itemId = i.id
+      JOIN items i ON si."itemId" = i.id
       WHERE i.category IS NOT NULL
       GROUP BY i.category;
     `;
