@@ -40,7 +40,7 @@ exports.checkout = async (req, res) => {
       // Verify items are not already sold
       const itemIds = items.map(item => parseInt(item.itemId));
       const existingItems = await prisma.item.findMany({
-        where: { id: { in: itemIds } },
+        where: { id: { in: itemIds }, userId: req.user.id },
         select: { id: true, isSold: true, name: true }
       });
 
@@ -59,6 +59,7 @@ exports.checkout = async (req, res) => {
           amountPaid: parseFloat(paidAmount),
           amountDue: parseFloat(amountDue),
           paymentStatus,
+          userId: req.user.id
         },
       });
 
@@ -82,7 +83,7 @@ exports.checkout = async (req, res) => {
 
       // Mark items as sold
       await prisma.item.updateMany({
-        where: { id: { in: itemIds } },
+        where: { id: { in: itemIds }, userId: req.user.id },
         data: { isSold: true },
       });
 
@@ -123,7 +124,7 @@ exports.getAllSales = async (req, res) => {
   const take = parseInt(limit);
 
   try {
-    const where = {}; // Removed incorrect isSold: false filter
+    const where = { userId: req.user.id }; // Removed incorrect isSold: false filter
     if (search) {
       // Search by customer name or item name in the sale
       where.OR = [
@@ -211,8 +212,8 @@ exports.getSaleById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const sale = await prisma.sale.findUnique({
-      where: { id: parseInt(id) },
+    const sale = await prisma.sale.findFirst({
+      where: { id: parseInt(id), userId: req.user.id },
       include: {
         customer: {
           select: {

@@ -3,7 +3,7 @@ const prisma = require('../prismaClient.js');
 exports.getUnprintedItems = async (req, res) => {
   try {
     const items = await prisma.item.findMany({
-      where: { barcodePrinted: false, isSold: false },
+      where: { barcodePrinted: false, isSold: false, userId: req.user.id },
       select: { id: true, name: true, sku: true },
     });
     res.json(items);
@@ -16,7 +16,7 @@ exports.markAsPrinted = async (req, res) => {
   try {
     const { itemIds } = req.body;
     await prisma.item.updateMany({
-      where: { id: { in: itemIds } },
+      where: { id: { in: itemIds }, userId: req.user.id },
       data: { barcodePrinted: true },
     });
     res.json({ message: 'Items marked as printed' });
@@ -31,7 +31,7 @@ exports.getAllItems = async (req, res) => {
   const take = parseInt(limit);
 
   try {
-    const where = {};
+    const where = { userId: req.user.id };
     if (search) {
       where.OR = [{ name: { contains: search } }, { sku: { contains: search } }, { huid: { contains: search } }];
     }
@@ -68,7 +68,7 @@ exports.getAllItems = async (req, res) => {
 
 exports.getItemBySku = async (req, res) => {
   try {
-    const item = await prisma.item.findUnique({ where: { sku: req.params.sku } });
+    const item = await prisma.item.findFirst({ where: { sku: req.params.sku, userId: req.user.id } });
     if (!item) return res.status(404).json({ message: 'Item not found.' });
     res.json(item);
   } catch (error) {
@@ -78,7 +78,7 @@ exports.getItemBySku = async (req, res) => {
 
 exports.getItemById = async (req, res) => {
   try {
-    const item = await prisma.item.findUnique({ where: { id: parseInt(req.params.id) } });
+    const item = await prisma.item.findFirst({ where: { id: parseInt(req.params.id), userId: req.user.id } });
     if (!item) return res.status(404).json({ message: 'Item not found.' });
     res.json(item);
   } catch (error) {
@@ -105,6 +105,7 @@ exports.createItem = async (req, res) => {
         sgstPct: sgstPct ? parseFloat(sgstPct) : null,
         cost: cost ? parseFloat(cost) : null,
         price: price ? parseFloat(price) : null,
+        userId: req.user.id
       },
     });
     res.status(201).json(newItem);
@@ -119,6 +120,10 @@ exports.updateItem = async (req, res) => {
   if (!name || !sku) return res.status(400).json({ message: 'Name and SKU required.' });
 
   try {
+    // Verify ownership
+    const existingItem = await prisma.item.findFirst({ where: { id: parseInt(req.params.id), userId: req.user.id } });
+    if (!existingItem) return res.status(404).json({ message: 'Item not found.' });
+
     const updatedItem = await prisma.item.update({
       where: { id: parseInt(req.params.id) },
       data: {
@@ -146,6 +151,9 @@ exports.updateItem = async (req, res) => {
 
 exports.deleteItem = async (req, res) => {
   try {
+    const item = await prisma.item.findFirst({ where: { id: parseInt(req.params.id), userId: req.user.id } });
+    if (!item) return res.status(404).json({ message: 'Item not found.' });
+
     const saleItems = await prisma.saleItem.findFirst({ where: { itemId: parseInt(req.params.id) } });
     if (saleItems) return res.status(400).json({ message: 'Cannot delete sold item.' });
     await prisma.item.delete({ where: { id: parseInt(req.params.id) } });

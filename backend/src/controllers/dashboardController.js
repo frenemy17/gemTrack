@@ -5,17 +5,18 @@ exports.getStats = async (req, res) => {
   try {
     const totalRevenue = await prisma.payment.aggregate({
       _sum: { amountPaid: true },
+      where: { sale: { userId: req.user.id } }
     });
 
     const totalDues = await prisma.sale.aggregate({
       _sum: { amountDue: true },
-      where: { paymentStatus: { not: 'PAID' } },
+      where: { paymentStatus: { not: 'PAID' }, userId: req.user.id },
     });
 
     const totalItems = await prisma.item.count({
-      where: { isSold: false }
+      where: { isSold: false, userId: req.user.id }
     });
-    const totalCustomers = await prisma.customer.count();
+    const totalCustomers = await prisma.customer.count({ where: { userId: req.user.id } });
 
     res.json({
       totalRevenue: totalRevenue._sum.amountPaid || 0,
@@ -36,6 +37,7 @@ exports.getSalesOverTime = async (req, res) => {
         TO_CHAR(created_at, 'YYYY-MM') as month,
         SUM("totalSaleAmount") as "totalSales"
       FROM sales
+      WHERE "userId" = ${req.user.id}
       GROUP BY month
       ORDER BY month ASC
       LIMIT 12;
@@ -61,6 +63,7 @@ exports.getTopSellingItems = async (req, res) => {
       _count: {
         itemId: true,
       },
+      where: { sale: { userId: req.user.id } },
       orderBy: {
         _count: {
           itemId: 'desc',
@@ -97,6 +100,7 @@ exports.getCustomerDues = async (req, res) => {
     const dues = await prisma.sale.findMany({
       where: {
         paymentStatus: { not: 'PAID' },
+        userId: req.user.id
       },
       select: {
         id: true,
@@ -128,6 +132,7 @@ exports.getSalesByYear = async (req, res) => {
         TO_CHAR(created_at, 'YYYY') as year,
         SUM("totalSaleAmount") as "totalSales"
       FROM sales
+      WHERE "userId" = ${req.user.id}
       GROUP BY year
       ORDER BY year DESC
       LIMIT 5;
@@ -154,7 +159,7 @@ exports.getSalesByCategory = async (req, res) => {
         COUNT(si.id) as "itemCount"
       FROM sale_items si
       JOIN items i ON si."itemId" = i.id
-      WHERE i.category IS NOT NULL
+      WHERE i.category IS NOT NULL AND i."userId" = ${req.user.id}
       GROUP BY i.category
       ORDER BY "totalSales" DESC;
     `;
@@ -177,6 +182,7 @@ exports.getTotalSalesStats = async (req, res) => {
     const totalSales = await prisma.sale.aggregate({
       _sum: { totalSaleAmount: true },
       _count: true,
+      where: { userId: req.user.id }
     });
 
     const categoryStats = await prisma.$queryRaw`
@@ -185,7 +191,7 @@ exports.getTotalSalesStats = async (req, res) => {
         SUM(si."soldPrice") as amount
       FROM sale_items si
       JOIN items i ON si."itemId" = i.id
-      WHERE i.category IS NOT NULL
+      WHERE i.category IS NOT NULL AND i."userId" = ${req.user.id}
       GROUP BY i.category;
     `;
 
@@ -212,7 +218,8 @@ exports.getPiecesByMetal = async (req, res) => {
       },
       where: {
         isSold: false, // Only count items in stock
-        metal: { not: null }
+        metal: { not: null },
+        userId: req.user.id
       }
     });
 
@@ -233,6 +240,7 @@ exports.getRecentSales = async (req, res) => {
     const recentSales = await prisma.sale.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
+      where: { userId: req.user.id },
       include: {
         customer: {
           select: { name: true }

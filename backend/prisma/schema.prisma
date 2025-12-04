@@ -18,6 +18,11 @@ model User {
   name      String?
   createdAt DateTime @default(now()) @map("created_at")
 
+  customers   Customer[]
+  items       Item[]
+  sales       Sale[]
+  shopProfile ShopProfile?
+
   @@map("users")
 }
 
@@ -33,6 +38,9 @@ model Customer {
   pancard   String?
   createdAt DateTime @default(now()) @map("created_at")
   sales     Sale[]
+
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@map("customers")
 }
@@ -62,6 +70,9 @@ model Item {
   createdAt          DateTime  @default(now()) @map("created_at")
   saleItems          SaleItem[]
 
+  userId             Int?
+  user               User?     @relation(fields: [userId], references: [id])
+
   @@map("items")
 }
 
@@ -82,6 +93,9 @@ model Sale {
 
   saleItems SaleItem[]
   payments  Payment[]
+
+  userId    Int?
+  user      User?     @relation(fields: [userId], references: [id])
 
   @@map("sales")
 }
@@ -130,5 +144,8 @@ model ShopProfile {
   gstin       String?
   updatedAt   DateTime @updatedAt
   
+  userId      Int?     @unique
+  user        User?    @relation(fields: [userId], references: [id])
+
   @@map("shop_profile")
 }

@@ -6,7 +6,7 @@ exports.getAllCustomers = async (req, res) => {
   const take = parseInt(limit);
 
   try {
-    const where = {};
+    const where = { userId: req.user.id };
     if (search) {
       where.OR = [
         { name: { contains: search } },
@@ -54,6 +54,7 @@ exports.createCustomer = async (req, res) => {
         city,
         pincode,
         pancard,
+        userId: req.user.id
       },
     });
     res.status(201).json(newCustomer);
@@ -76,6 +77,10 @@ exports.updateCustomer = async (req, res) => {
   }
 
   try {
+    // Verify ownership
+    const existingCustomer = await prisma.customer.findFirst({ where: { id: parseInt(id), userId: req.user.id } });
+    if (!existingCustomer) return res.status(404).json({ message: 'Customer not found.' });
+
     const updatedCustomer = await prisma.customer.update({
       where: { id: parseInt(id) },
       data: {
@@ -105,6 +110,9 @@ exports.deleteCustomer = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const customer = await prisma.customer.findFirst({ where: { id: parseInt(id), userId: req.user.id } });
+    if (!customer) return res.status(404).json({ message: 'Customer not found.' });
+
     await prisma.customer.delete({
       where: { id: parseInt(id) },
     });

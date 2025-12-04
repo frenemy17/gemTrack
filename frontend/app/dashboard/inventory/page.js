@@ -46,13 +46,15 @@ export default function InventoryPage() {
     const [itemsToPrint, setItemsToPrint] = useState([]);
 
     const fetchBarcodeImage = async (sku) => {
-        const response = await fetch(`https://barcodeapi.org/api/128/${encodeURIComponent(sku)}?height=30&width=2&bg=ffffff&fg=000000`);
-        const blob = await response.blob();
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
+        const { default: JsBarcode } = await import('jsbarcode');
+        const canvas = document.createElement('canvas');
+        JsBarcode(canvas, sku, {
+            format: "CODE128",
+            width: 2,
+            height: 30,
+            displayValue: false
         });
+        return canvas.toDataURL("image/png");
     };
 
     const generatePDF = async (items) => {

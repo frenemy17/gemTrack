@@ -5,7 +5,7 @@ const prisma = require('../prismaClient');
 // @access  Private
 exports.getProfile = async (req, res) => {
     try {
-        let profile = await prisma.shopProfile.findFirst();
+        let profile = await prisma.shopProfile.findFirst({ where: { userId: req.user.id } });
 
         if (!profile) {
             // Create default if not exists
@@ -14,7 +14,8 @@ exports.getProfile = async (req, res) => {
                     shopName: "My Jewelry Shop",
                     address: "",
                     phone: "",
-                    gstin: ""
+                    gstin: "",
+                    userId: req.user.id
                 }
             });
         }
@@ -38,7 +39,7 @@ exports.updateProfile = async (req, res) => {
         // but for upsert we need a unique constraint. ID is unique.
         // Let's first find the ID.
 
-        let profile = await prisma.shopProfile.findFirst();
+        let profile = await prisma.shopProfile.findFirst({ where: { userId: req.user.id } });
 
         if (profile) {
             profile = await prisma.shopProfile.update({
@@ -47,7 +48,7 @@ exports.updateProfile = async (req, res) => {
             });
         } else {
             profile = await prisma.shopProfile.create({
-                data: { shopName, address, phone, gstin }
+                data: { shopName, address, phone, gstin, userId: req.user.id }
             });
         }
 
