@@ -13,7 +13,8 @@ import {
     LogOut,
     Menu,
     Gem,
-    FileText
+    FileText,
+    Settings
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -25,6 +26,7 @@ const navItems = [
     { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
     { name: 'Sales History', href: '/dashboard/sales', icon: FileText },
     { name: 'Customers', href: '/dashboard/customers', icon: Users },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }) {
