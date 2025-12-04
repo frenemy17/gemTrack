@@ -1,12 +1,30 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { shop } from '@/utils/api';
 
-const SHOP_NAME = "GEMTRACK JEWELRY";
-const SHOP_ADDRESS = "123 Gold Market, Mumbai, MH";
-const SHOP_PHONE = "+91 98765 43210";
-const SHOP_GSTIN = "27ABCDE1234F1Z5";
+const fetchShopProfile = async () => {
+    try {
+        const res = await shop.getProfile();
+        return res.data || {
+            shopName: "GEMTRACK JEWELRY",
+            address: "123 Gold Market, Mumbai, MH",
+            phone: "+91 98765 43210",
+            gstin: "27ABCDE1234F1Z5"
+        };
+    } catch (error) {
+        console.error("Failed to fetch shop profile for PDF", error);
+        return {
+            shopName: "GEMTRACK JEWELRY",
+            address: "123 Gold Market, Mumbai, MH",
+            phone: "+91 98765 43210",
+            gstin: "27ABCDE1234F1Z5"
+        };
+    }
+};
 
-export const createInvoiceDoc = (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
+export const createInvoiceDoc = async (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
+    const profile = await fetchShopProfile();
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
 
@@ -20,12 +38,12 @@ export const createInvoiceDoc = (customer, saleId, items, paymentMethod, amountP
     // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    centerText(SHOP_NAME, 15);
+    centerText(profile.shopName || "GEMTRACK JEWELRY", 15);
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    centerText(`${SHOP_ADDRESS} | Phone: ${SHOP_PHONE}`, 22);
-    centerText(`GSTIN: ${SHOP_GSTIN}`, 27);
+    centerText(`${profile.address || ''} | Phone: ${profile.phone || ''}`, 22);
+    centerText(`GSTIN: ${profile.gstin || ''}`, 27);
 
     doc.setLineWidth(0.5);
     doc.line(10, 32, pageWidth - 10, 32);
@@ -123,17 +141,17 @@ export const createInvoiceDoc = (customer, saleId, items, paymentMethod, amountP
 
     // Thank you
     centerText("Thank you for your business!", totalY + 40);
-    centerText(`For queries: ${SHOP_PHONE}`, totalY + 45);
+    centerText(`For queries: ${profile.phone || ''}`, totalY + 45);
 
     return doc;
 };
 
-export const generateInvoice = (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
-    const doc = createInvoiceDoc(customer, saleId, items, paymentMethod, amountPaid, amountDue, discount, billNumber);
+export const generateInvoice = async (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
+    const doc = await createInvoiceDoc(customer, saleId, items, paymentMethod, amountPaid, amountDue, discount, billNumber);
     doc.save(`Invoice_${billNumber || saleId}.pdf`);
 };
 
-export const generateInvoiceBlobUrl = (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
-    const doc = createInvoiceDoc(customer, saleId, items, paymentMethod, amountPaid, amountDue, discount, billNumber);
+export const generateInvoiceBlobUrl = async (customer, saleId, items, paymentMethod, amountPaid, amountDue, discount = 0, billNumber) => {
+    const doc = await createInvoiceDoc(customer, saleId, items, paymentMethod, amountPaid, amountDue, discount, billNumber);
     return doc.output('bloburl');
 };

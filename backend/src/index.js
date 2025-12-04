@@ -6,6 +6,7 @@ const customerRoutes = require('./routes/customer')
 const saleRoutes = require('./routes/sale')
 const marketRoutes = require('./routes/market')
 const dashboardRoutes = require('./routes/dashboard')
+const shopRoutes = require('./routes/shop')
 const app = express()
 const prisma = require('./prismaClient');
 const cors = require('cors');
@@ -26,6 +27,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/shop', shopRoutes);
 async function connectToDatabase() {
   try {
     await prisma.$connect();

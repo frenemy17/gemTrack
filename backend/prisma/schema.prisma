@@ -120,3 +120,15 @@ model Payment {
 
   @@map("payments")
 }
+
+// 7. Shop Profile Model (NEW)
+model ShopProfile {
+  id          Int      @id @default(autoincrement())
+  shopName    String   @default("My Jewelry Shop")
+  address     String?
+  phone       String?
+  gstin       String?
+  updatedAt   DateTime @updatedAt
+  
+  @@map("shop_profile")
+}

@@ -85,7 +85,12 @@ export const market = {
             console.error("Failed to fetch market rates", error);
             return { data: null };
         }
-    },
+    }
+};
+
+export const shop = {
+    getProfile: () => api.get('/shop'),
+    updateProfile: (data) => api.put('/shop', data),
 };
 
 export default api;

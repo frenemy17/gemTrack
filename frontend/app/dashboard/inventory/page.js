@@ -88,12 +88,17 @@ export default function InventoryPage() {
 
                 // Draw Text
                 pdf.setFontSize(10);
-                const name = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
+                const name = item.name ? (item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name) : 'Unknown Item';
                 pdf.text(name, x + 5, y + 30);
 
                 pdf.setFontSize(8);
-                pdf.text(`SKU: ${item.sku}`, x + 5, y + 35);
-                pdf.text(`${item.netWeight}g | ${item.purity}`, x + 5, y + 39);
+                pdf.text(`SKU: ${item.sku || 'N/A'}`, x + 5, y + 35);
+
+                const weight = item.netWeight ? `${item.netWeight}g` : '';
+                const purity = item.purity ? item.purity : '';
+                const details = [weight, purity].filter(Boolean).join(' | ');
+
+                pdf.text(details, x + 5, y + 39);
 
                 x += 70;
                 col++;
