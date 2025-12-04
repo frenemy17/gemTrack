@@ -5,10 +5,17 @@ const prisma = require('../prismaClient');
 // @access  Private
 exports.getProfile = async (req, res) => {
     try {
+        console.log("Shop Profile Request - User:", req.user);
+        if (!req.user || !req.user.id) {
+            console.error("User ID missing in request");
+            return res.status(401).json({ message: "User not authenticated correctly" });
+        }
+
         let profile = await prisma.shopProfile.findFirst({ where: { userId: req.user.id } });
 
         if (!profile) {
             // Create default if not exists
+            console.log("Creating default profile for user:", req.user.id);
             profile = await prisma.shopProfile.create({
                 data: {
                     shopName: "My Jewelry Shop",
@@ -23,7 +30,7 @@ exports.getProfile = async (req, res) => {
         res.json(profile);
     } catch (error) {
         console.error('Error fetching shop profile:', error);
-        res.status(500).json({ message: 'Failed to fetch shop profile' });
+        res.status(500).json({ message: 'Failed to fetch shop profile', error: error.message });
     }
 };
 
