@@ -23,14 +23,30 @@ export default function BillPreviewDialog({
   const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
-    if (open && customer && cart.length) {
-      const { method, paid, due } = paymentDetails;
-      // Use a temporary ID for preview
-      const url = generateInvoiceBlobUrl(customer, "PREVIEW", cart, method, paid, due);
-      setPdfUrl(url);
-    } else {
-      setPdfUrl(null);
-    }
+    let active = true;
+
+    const loadPreview = async () => {
+      if (open && customer && cart.length) {
+        try {
+          const { method, paid, due } = paymentDetails;
+          // Use a temporary ID for preview
+          const url = await generateInvoiceBlobUrl(customer, "PREVIEW", cart, method, paid, due);
+          if (active) {
+            setPdfUrl(url);
+          }
+        } catch (error) {
+          console.error("Failed to generate preview", error);
+        }
+      } else {
+        if (active) setPdfUrl(null);
+      }
+    };
+
+    loadPreview();
+
+    return () => {
+      active = false;
+    };
   }, [open, customer, cart, paymentDetails]);
 
   if (!customer || !cart.length) return null;
