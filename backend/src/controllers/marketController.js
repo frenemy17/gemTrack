@@ -28,10 +28,24 @@ exports.getMarketRates = async (req, res) => {
     ]);
 
     if (!goldResponse.ok) {
-      throw new Error(`Gold API Error: ${goldResponse.statusText}`);
+      const errorText = await goldResponse.text();
+      console.error(`Gold API Error (${goldResponse.status}): ${errorText}`);
+      return res.json({
+        success: false,
+        message: `Gold API Error: ${goldResponse.status} ${goldResponse.statusText}`,
+        details: errorText,
+        rates: null
+      });
     }
     if (!silverResponse.ok) {
-      throw new Error(`Silver API Error: ${silverResponse.statusText}`);
+      const errorText = await silverResponse.text();
+      console.error(`Silver API Error (${silverResponse.status}): ${errorText}`);
+      return res.json({
+        success: false,
+        message: `Silver API Error: ${silverResponse.status} ${silverResponse.statusText}`,
+        details: errorText,
+        rates: null
+      });
     }
 
     const goldData = await goldResponse.json();
@@ -62,10 +76,10 @@ exports.getMarketRates = async (req, res) => {
       return res.json(realData);
     }
 
-    console.warn("GoldAPI returned incomplete data.");
+    console.warn("GoldAPI returned incomplete data:", { goldData, silverData });
     return res.json({
       success: false,
-      message: "Failed to fetch complete market data",
+      message: "GoldAPI returned incomplete data",
       rates: null
     });
   } catch (error) {
