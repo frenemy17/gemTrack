@@ -69,8 +69,13 @@ export default function SettingsPage() {
                 toast.success("GoldAPI Connected");
             } else {
                 setApiStatus('error');
-                setApiMessage("Failed to fetch rates. Check API Key or Quota.");
-                toast.error("GoldAPI Connection Failed");
+                // Show the actual error message from backend if available
+                const msg = res.data?.message || "Failed to fetch rates. Check API Key or Quota.";
+                const details = res.data?.details ? ` (${res.data.details})` : '';
+                setApiMessage(msg + details);
+                toast.error("GoldAPI Connection Failed", {
+                    description: msg
+                });
             }
         } catch (error) {
             setApiStatus('error');
