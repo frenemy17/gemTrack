@@ -83,6 +83,10 @@ export const market = {
             return res;
         } catch (error) {
             console.error("Failed to fetch market rates", error);
+            // Return the error response so the caller can handle it
+            if (error.response) {
+                return error.response;
+            }
             return { data: null };
         }
     }
