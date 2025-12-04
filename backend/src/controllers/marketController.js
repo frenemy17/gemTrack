@@ -9,23 +9,33 @@ exports.getMarketRates = async (req, res) => {
     // Use the provided API key directly or from env
     const apiKey = process.env.GOLD_API_KEY || 'goldapi-3gssmipo4jj7-io';
 
-    const config = {
-      headers: {
-        'x-access-token': apiKey,
-        'Content-Type': 'application/json'
-      },
-      maxRedirects: 5,
-      timeout: 5000 // 5 seconds timeout
+    const myHeaders = {
+      "x-access-token": apiKey,
+      "Content-Type": "application/json"
+    };
+
+    const requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+      redirect: 'follow'
     };
 
     // Fetch Gold (XAU) and Silver (XAG) in INR
+    // Using native fetch as per user suggestion and successful test
     const [goldResponse, silverResponse] = await Promise.all([
-      axios.get("https://www.goldapi.io/api/XAU/INR", config),
-      axios.get("https://www.goldapi.io/api/XAG/INR", config)
+      fetch("https://www.goldapi.io/api/XAU/INR", requestOptions),
+      fetch("https://www.goldapi.io/api/XAG/INR", requestOptions)
     ]);
 
-    const goldData = goldResponse.data;
-    const silverData = silverResponse.data;
+    if (!goldResponse.ok) {
+      throw new Error(`Gold API Error: ${goldResponse.statusText}`);
+    }
+    if (!silverResponse.ok) {
+      throw new Error(`Silver API Error: ${silverResponse.statusText}`);
+    }
+
+    const goldData = await goldResponse.json();
+    const silverData = await silverResponse.json();
 
     // Helper to safely parse rate
     const parseRate = (val) => {
