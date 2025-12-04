@@ -6,8 +6,8 @@ const axios = require('axios');
 // @access  Private
 exports.getMarketRates = async (req, res) => {
   try {
-    // Use the provided API key directly
-    const apiKey = 'goldapi-3gssmipo4jj7-io';
+    // Use the provided API key directly or from env
+    const apiKey = process.env.GOLD_API_KEY || 'goldapi-3gssmipo4jj7-io';
 
     const config = {
       headers: {
@@ -69,13 +69,7 @@ exports.getMarketRates = async (req, res) => {
   }
 };
 
-// @route   GET /api/market/news
-// @route   GET /api/market/news
-// @desc    Get jewelry industry news
-// @access  Private
-exports.getMarketRates = async (req, res) => {
-  // ... existing code ...
-};
+
 
 exports.getMarketNews = async (req, res) => {
   try {
