@@ -5,9 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Gem } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SignupPage() {
     const [name, setName] = useState('');
@@ -31,25 +31,31 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-                    <CardDescription className="text-center">
-                        Enter your details to create a new account
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+        <div className="min-h-screen grid lg:grid-cols-2">
+            {/* Left Side - Form */}
+            <div className="flex items-center justify-center p-8 bg-background">
+                <div className="w-full max-w-sm space-y-8">
+                    <div className="flex flex-col space-y-2 text-center lg:text-left">
+                        <div className="flex items-center justify-center lg:justify-start space-x-2 text-primary">
+                            <Gem className="h-6 w-6" />
+                            <span className="font-bold text-xl">GemTrack</span>
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
+                        <p className="text-muted-foreground">
+                            Enter your details below to create your account
+                        </p>
+                    </div>
+
                     <form onSubmit={handleSignup} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">Full Name</Label>
                             <Input
                                 id="name"
                                 type="text"
-                                placeholder="John Doe"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
+                                className="h-11"
                             />
                         </div>
                         <div className="space-y-2">
@@ -57,10 +63,10 @@ export default function SignupPage() {
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="admin@gemtrack.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
+                                className="h-11"
                             />
                         </div>
                         <div className="space-y-2">
@@ -71,15 +77,18 @@ export default function SignupPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                className="h-11"
                             />
                         </div>
+
                         {error && (
                             <div className="flex items-center space-x-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                                 <AlertCircle className="h-4 w-4" />
                                 <span>{error}</span>
                             </div>
                         )}
-                        <Button type="submit" className="w-full" disabled={loading}>
+
+                        <Button type="submit" className="w-full h-11" disabled={loading}>
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -90,13 +99,27 @@ export default function SignupPage() {
                             )}
                         </Button>
                     </form>
-                </CardContent>
-                <CardFooter className="flex justify-center">
-                    <Link href="/login" className="text-sm text-blue-600 hover:underline">
-                        Already have an account? Sign In
-                    </Link>
-                </CardFooter>
-            </Card>
+
+                    <div className="text-center text-sm text-muted-foreground">
+                        Already have an account?{' '}
+                        <Link href="/login" className="font-medium text-primary hover:underline">
+                            Sign In
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Side - Image */}
+            <div className="hidden lg:block relative bg-muted">
+                <Image
+                    src="/signup-hero.png"
+                    alt="Premium Jewelry Store"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+                <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay */}
+            </div>
         </div>
     );
 }
