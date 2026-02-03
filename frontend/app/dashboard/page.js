@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
     return (
         <motion.div
-            className="space-y-8 pb-10"
+            className="space-y-4 pb-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -123,15 +123,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <motion.div variants={itemVariants}>
                     <Card className="hover:shadow-md transition-shadow duration-300 border-l-4 border-l-[#D4AF37]">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Sales</CardTitle>
                             <ShoppingBag className="h-4 w-4 text-[#D4AF37]" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-light">{stats?.totalSales || '0'}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-2xl font-light">{stats?.totalSales || '0'}</div>
                             <p className="text-xs text-muted-foreground mt-1 flex items-center">
                                 <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
                                 +2.5% from last month
@@ -141,12 +141,12 @@ export default function DashboardPage() {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                     <Card className="hover:shadow-md transition-shadow duration-300 border-l-4 border-l-[#C0C0C0]">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Revenue</CardTitle>
                             <DollarSign className="h-4 w-4 text-[#C0C0C0]" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-light">₹{stats?.totalRevenue?.toLocaleString() || '0'}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-2xl font-light">₹{stats?.totalRevenue?.toLocaleString() || '0'}</div>
                             <p className="text-xs text-muted-foreground mt-1 flex items-center">
                                 <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
                                 +12% from last month
@@ -156,24 +156,24 @@ export default function DashboardPage() {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                     <Card className="hover:shadow-md transition-shadow duration-300 border-l-4 border-l-[#A9A9A9]">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Inventory</CardTitle>
                             <Package className="h-4 w-4 text-[#A9A9A9]" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-light">{stats?.totalItems || '0'}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-2xl font-light">{stats?.totalItems || '0'}</div>
                             <p className="text-xs text-muted-foreground mt-1">Items in stock</p>
                         </CardContent>
                     </Card>
                 </motion.div>
                 <motion.div variants={itemVariants}>
                     <Card className="hover:shadow-md transition-shadow duration-300 border-l-4 border-l-[#2F4F4F]">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Clients</CardTitle>
                             <Users className="h-4 w-4 text-[#2F4F4F]" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-light">{stats?.totalCustomers || '0'}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-2xl font-light">{stats?.totalCustomers || '0'}</div>
                             <p className="text-xs text-muted-foreground mt-1">Active customers</p>
                         </CardContent>
                     </Card>
@@ -181,15 +181,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <motion.div className="col-span-4" variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader>
+                        <CardHeader className="p-4 pb-2">
                             <CardTitle className="font-light tracking-wide">Revenue Trend</CardTitle>
                             <CardDescription>Monthly revenue performance</CardDescription>
                         </CardHeader>
-                        <CardContent className="pl-2">
-                            <div className="h-[350px] w-full">
+                        <CardContent className="pl-2 p-4 pt-0">
+                            <div className="h-[240px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={salesOverTime}>
                                         <defs>
@@ -220,12 +220,12 @@ export default function DashboardPage() {
                 </motion.div>
                 <motion.div className="col-span-3" variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader>
+                        <CardHeader className="p-4 pb-2">
                             <CardTitle className="font-light tracking-wide">Yearly Performance</CardTitle>
                             <CardDescription>Sales comparison by year</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="h-[350px] w-full">
+                        <CardContent className="p-4 pt-0">
+                            <div className="h-[240px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={salesByYear}>
                                         <XAxis dataKey="year" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
@@ -251,15 +251,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <motion.div className="col-span-4" variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader>
+                        <CardHeader className="p-4 pb-2">
                             <CardTitle className="font-light tracking-wide">Category Distribution</CardTitle>
                             <CardDescription>Revenue by product category</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="h-[350px] w-full">
+                        <CardContent className="p-4 pt-0">
+                            <div className="h-[240px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={salesByCategory} layout="vertical" margin={{ left: 20 }}>
                                         <XAxis type="number" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
@@ -284,20 +284,20 @@ export default function DashboardPage() {
                 </motion.div>
                 <motion.div className="col-span-3" variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader>
+                        <CardHeader className="p-4 pb-2">
                             <CardTitle className="font-light tracking-wide">Stock Composition</CardTitle>
                             <CardDescription>Items by metal type</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="h-[350px] w-full flex items-center justify-center">
+                        <CardContent className="p-4 pt-0">
+                            <div className="h-[240px] w-full flex items-center justify-center">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={piecesByMetal}
                                             cx="50%"
                                             cy="50%"
-                                            innerRadius={80}
-                                            outerRadius={100}
+                                            innerRadius={60}
+                                            outerRadius={80}
                                             paddingAngle={5}
                                             dataKey="count"
                                             nameKey="metal"
@@ -326,15 +326,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Sales & Gold Rates Row */}
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
                 {/* Recent Sales */}
                 <motion.div variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader>
+                        <CardHeader className="p-4 pb-2">
                             <CardTitle className="font-light tracking-wide">Recent Sales</CardTitle>
                             <CardDescription>Latest transactions</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-4 pt-0">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">
@@ -378,7 +378,7 @@ export default function DashboardPage() {
                 {/* Gold Rates Table */}
                 <motion.div variants={itemVariants}>
                     <Card className="h-full">
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
                             <div>
                                 <CardTitle className="font-light tracking-wide">Live Market Rates</CardTitle>
                                 <CardDescription>Real-time gold and silver prices</CardDescription>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
                                 Live
                             </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-4 pt-0">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">
